@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0-*",
+    "version": "1.0.1-*",
 
     "title": "Bitcraft.Tools.GitCommitInfo",
     "authors": [ "bitcraft Corporation", "Sebastien ROBERT" ],
@@ -9,7 +9,7 @@
 
     "buildOptions": {
         "emitEntryPoint": true,
-        "outputName": "dotnet-git-info",
+        "outputName": "dotnet-git-commit-info",
         "warningsAsErrors": true
     },
 
