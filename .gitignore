@@ -1,0 +1,5 @@
+Bitcraft.Tools.GitCommitInfo/bin/
+Bitcraft.Tools.GitCommitInfo/obj/
+project.lock.json
+.vs/
+*.xproj.user

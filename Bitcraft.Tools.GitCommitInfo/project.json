@@ -1,0 +1,38 @@
+{
+    "version": "1.0.0-*",
+
+    "title": "Bitcraft.Tools.GitCommitInfo",
+    "authors": [ "bitcraft Corporation", "Sebastien ROBERT" ],
+    "copyright": "bitcraft Corporation",
+    "description": "Tool that generates a C# source code file information about the current git repository.",
+    "language": "en-US",
+
+    "buildOptions": {
+        "emitEntryPoint": true,
+        "outputName": "dotnet-git-info",
+        "warningsAsErrors": true
+    },
+
+    "packOptions": {
+        "owners": [ "bitcraft Corporation" ],
+        "projectUrl": "https://github.com/bitcraftCoLtd/GitCommitInfo",
+        "iconUrl": "https://www.bitcraft.co.jp/images/logo_dark_64x64_32bits.png",
+        "licenseUrl": "https://raw.githubusercontent.com/bitcraftCoLtd/GitCommitInfo/master/LICENSE",
+        "tags": [ "bitcraft", "tool", "git", "commit", "hash", "branch" ]
+    },
+
+    "dependencies": {
+        "Microsoft.Extensions.Configuration": "1.0.0",
+        "Microsoft.Extensions.Configuration.CommandLine": "1.0.0",
+        "Microsoft.NETCore.App": {
+            "type": "platform",
+            "version": "1.0.3"
+        }
+    },
+
+    "frameworks": {
+        "netcoreapp1.0": {
+            "imports": "dnxcore50"
+        }
+    }
+}
