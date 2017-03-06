@@ -242,7 +242,9 @@ namespace Bitcraft.Tools.GitCommitInfo
 
             try
             {
-                File.WriteAllText(outputFilename, sb.ToString());
+                string newFileContent = sb.ToString();
+                if (File.Exists(outputFilename) == false || File.ReadAllText(outputFilename) != newFileContent)
+                    File.WriteAllText(outputFilename, newFileContent);
             }
             catch (Exception ex)
             {
