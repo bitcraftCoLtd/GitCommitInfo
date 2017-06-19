@@ -1,6 +1,6 @@
 # Overview
 
-This tool generates a C# source code file containing the hash of the latest commit of your local git repository.
+This tool generates a C# source code file containing the information of the latest commit of your local git repository.
 
 The name of the built binary is `dotnet-git-commit-info`, this is for integration with .NET Core CLI tool.
 
@@ -9,6 +9,22 @@ The name of the built binary is `dotnet-git-commit-info`, this is for integratio
 A NuGet package is available here: https://www.nuget.org/packages/Bitcraft.Tools.GitCommitInfo
 
 # How to use
+
+First, for versions 1.1.0 or higher, be aware that running `dotnet restore` then `dotnet build` at the solution level will not work.
+
+You have to `restore` and `build` both projects separately:
+
+```
+dotnet restore Bitcraft.Tools.GitCommitInfo
+dotnet build Bitcraft.Tools.GitCommitInfo
+```
+
+then
+
+```
+dotnet restore TestLibrary
+dotnet build TestLibrary
+```
 
 ## In command line
 
@@ -174,7 +190,72 @@ namespace Alice.Bob
 }
 ```
 
-## With .NET Core CLI tool
+## With .NET Core CLI tool (msbuild)
+
+This works for version 1.1.0 or greater of the `Bitcraft.Tools.GitCommitInfo` tool.
+
+To integrate this tool in your project, you have to modify your `.csproj` file, as follow:
+
+The name of the target `GitCommitInfoTarget` can probably be whatever you want.
+
+The target have to be run after the `Restore` target in order to ensure the tool is restored, and it has to run before the build happens.
+
+### Simple version
+
+```XML
+    ...
+    <!-- ========== begining of Bitcraft.Tools.GitCommitInfo section ========== -->
+    <ItemGroup>
+        <Compile Include="GitCommitInfo.cs" />
+        <DotNetCliToolReference Include="Bitcraft.Tools.GitCommitInfo" Version="1.1.0" />
+    </ItemGroup>
+
+    <Target Name="GitCommitInfoTarget" AfterTargets="Restore" BeforeTargets="BeforeBuild">
+        <Exec Command="dotnet git-commit-info" />
+    </Target>
+    <!-- ========== end of Bitcraft.Tools.GitCommitInfo section ========== -->
+    ...
+```
+
+`GitCommitInfo.cs` in the `Compile` directive is the default filename produced by the tool.
+If this `Compile` directive is not declared, each build where the said file does not exist yet, will fail miserably.
+
+`1.1.0` is the current version of the tool.
+
+
+### Advanced version
+
+```XML
+    ...
+    <!-- ========== begining of Bitcraft.Tools.GitCommitInfo section ========== -->
+    <PropertyGroup>
+        <!-- feel free to tweak bellow variables -->
+        <GitCommitInfoToolVersion>1.1.0</GitCommitInfoToolVersion>
+        <GitCommitInfoFilename>GitCommitInfo.cs</GitCommitInfoFilename>
+        <GitCommitInfoToolOptions></GitCommitInfoToolOptions>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Condition="!Exists('$(GitCommitInfoFilename)')" Include="$(GitCommitInfoFilename)" />
+        <DotNetCliToolReference Include="Bitcraft.Tools.GitCommitInfo" Version="$(GitCommitInfoToolVersion)" />
+    </ItemGroup>
+
+    <Target Name="GitCommitInfoTarget" AfterTargets="Restore" BeforeTargets="BeforeBuild">
+        <Exec Command="dotnet git-commit-info $(GitCommitInfoToolOptions) --output $(GitCommitInfoFilename)" />
+    </Target>
+    <!-- ========== end of Bitcraft.Tools.GitCommitInfo section ========== -->
+    ...
+```
+
+The variables:
+
+- `GitCommitInfoToolVersion` is set to the current version of the tool.
+- `GitCommitInfoFilename` is set to the default filename produced by the tool.
+- `GitCommitInfoToolOptions` are additional options to provide to the tool.
+
+## With .NET Core CLI tool (project.json)
+
+This works only for version bellow 1.1.0 of the `Bitcraft.Tools.GitCommitInfo` tool.
 
 To integrate this tool in your project, you have to modify your `project.json` file, as follow:
 
@@ -188,13 +269,15 @@ To integrate this tool in your project, you have to modify your `project.json` f
     ...
     "scripts": {
         ...
-        "precompile": "dotnet git-commit-info --access-modifier internal"
+        "precompile": "dotnet git-commit-info"
         ...
     }
     ...
 ```
 
 ### Note
+
+Bellow note is for versions lower than 1.1.0 of the tool.
 
 If you are already using the generated class in your project, and for some reasons the file to generate in not present on your local machine, you may get a compile error saying the class you generated does not exist.
 

@@ -44,6 +44,13 @@ namespace Bitcraft.Tools.GitCommitInfo
             "/// </summary>"
         };
 
+        private static readonly string[] InstanceAccessorPropertyComment = new string[]
+        {
+            "/// <summary>",
+            "/// Gets an instance of the git commit information.",
+            "/// </summary>"
+        };
+
         private static readonly Regex namespaceNameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_\.]*$");
         private static readonly Regex classNameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_]*$");
 
@@ -106,7 +113,7 @@ namespace Bitcraft.Tools.GitCommitInfo
             // ------------------------------
 
             var p = new Process();
-            p.StartInfo = new ProcessStartInfo("git", $"log -n 1 --pretty=format:\"%h %H %ci\"");
+            p.StartInfo = new ProcessStartInfo("git", "log -n 1 --pretty=format:\"%h %H %ci\"");
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.UseShellExecute = false;
             p.Start();
@@ -123,14 +130,14 @@ namespace Bitcraft.Tools.GitCommitInfo
 
             if (commitInfoParts.Length != 3)
             {
-                Console.WriteLine($"git log failed to provide required information");
+                Console.WriteLine("git log failed to provide required information");
                 return -2;
             }
 
             // ------------------------------
 
             p = new Process();
-            p.StartInfo = new ProcessStartInfo("git", $"rev-parse --abbrev-ref HEAD");
+            p.StartInfo = new ProcessStartInfo("git", "rev-parse --abbrev-ref HEAD");
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.UseShellExecute = false;
             p.Start();
@@ -147,9 +154,6 @@ namespace Bitcraft.Tools.GitCommitInfo
 
             var sb = new StringBuilder();
 
-            AddLine(sb, "using System;");
-            sb.Append(GetLineEnding());
-
             if (options.NamespaceName != null)
             {
                 AddLine(sb, $"namespace {options.NamespaceName}");
@@ -162,19 +166,35 @@ namespace Bitcraft.Tools.GitCommitInfo
 
             string accessModifier = options.AccessModifier == AccessModifier.Public ? "public" : "internal";
 
-            AddLine(sb, $"{accessModifier} static class {options.ClassName}");
+            AddLine(sb, $"{accessModifier} class {options.ClassName}");
             AddLine(sb, "{");
             indentationLevel++;
+
+            // --- static constructor and accessor ------------------
+
+            foreach (var comment in InstanceAccessorPropertyComment)
+                AddLine(sb, comment);
+
+            AddLine(sb, $"public static {options.ClassName} Instance {{ get; }}");
+            AddLine(sb, null);
+
+            AddLine(sb, $"static {options.ClassName}()");
+            AddLine(sb, "{");
+            indentationLevel++;
+            AddLine(sb, $"Instance = new {options.ClassName}();");
+            indentationLevel--;
+            AddLine(sb, "}");
+            AddLine(sb, null);
 
             // --- branch name --------------------------------------
 
             foreach (string comment in BranchNamePropertyComment)
                 AddLine(sb, comment);
 
-            AddLine(sb, "public static string BranchName");
+            AddLine(sb, "public string BranchName");
             AddLine(sb, "{");
             indentationLevel++;
-            AddLine(sb, string.Concat("get { return \"", branchName, "\"; }"));
+            AddLine(sb, $"get {{ return \"{branchName}\"; }}");
             indentationLevel--;
             AddLine(sb, "}");
             AddLine(sb, null);
@@ -184,10 +204,10 @@ namespace Bitcraft.Tools.GitCommitInfo
             foreach (string comment in ShortCommitHashPropertyComment)
                 AddLine(sb, comment);
 
-            AddLine(sb, "public static string ShortCommitHash");
+            AddLine(sb, "public string ShortCommitHash");
             AddLine(sb, "{");
             indentationLevel++;
-            AddLine(sb, string.Concat("get { return \"", commitInfoParts[0], "\"; }"));
+            AddLine(sb, $"get {{ return \"{commitInfoParts[0]}\"; }}");
             indentationLevel--;
             AddLine(sb, "}");
             AddLine(sb, null);
@@ -197,10 +217,10 @@ namespace Bitcraft.Tools.GitCommitInfo
             foreach (string comment in LongCommitHashPropertyComment)
                 AddLine(sb, comment);
 
-            AddLine(sb, "public static string LongCommitHash");
+            AddLine(sb, "public string LongCommitHash");
             AddLine(sb, "{");
             indentationLevel++;
-            AddLine(sb, string.Concat("get { return \"", commitInfoParts[1], "\"; }"));
+            AddLine(sb, $"get {{ return \"{commitInfoParts[1]}\"; }}");
             indentationLevel--;
             AddLine(sb, "}");
             AddLine(sb, null);
@@ -210,10 +230,10 @@ namespace Bitcraft.Tools.GitCommitInfo
             foreach (string comment in CommitterDatePropertyComment)
                 AddLine(sb, comment);
 
-            AddLine(sb, "public static string CommitterDate");
+            AddLine(sb, "public string CommitterDate");
             AddLine(sb, "{");
             indentationLevel++;
-            AddLine(sb, string.Concat("get { return \"", commitInfoParts[2], "\"; }"));
+            AddLine(sb, $"get {{ return \"{commitInfoParts[2]}\"; }}");
             indentationLevel--;
             AddLine(sb, "}");
 

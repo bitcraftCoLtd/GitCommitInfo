@@ -3,3 +3,7 @@ Bitcraft.Tools.GitCommitInfo/obj/
 project.lock.json
 .vs/
 *.xproj.user
+TestLibrary/bin/
+TestLibrary/obj/
+TestLibrary/GitCommitInfo.cs
+TestLibrary/packages/

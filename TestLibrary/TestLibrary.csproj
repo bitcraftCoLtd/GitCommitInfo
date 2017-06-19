@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.4</TargetFramework>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <GitCommitInfoFilename>GitCommitInfo.cs</GitCommitInfoFilename>
+  </PropertyGroup>
+
+  <!-- ========== begining of Bitcraft.Tools.GitCommitInfo section ========== -->
+  <PropertyGroup>
+    <GitCommitInfoToolVersion>1.1.0</GitCommitInfoToolVersion>
+    <GitCommitInfoFilename>GitCommitInfo.cs</GitCommitInfoFilename>
+    <GitCommitInfoToolOptions></GitCommitInfoToolOptions>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Condition="!Exists('$(GitCommitInfoFilename)')" Include="$(GitCommitInfoFilename)" />
+    <DotNetCliToolReference Include="Bitcraft.Tools.GitCommitInfo" Version="$(GitCommitInfoToolVersion)" />
+  </ItemGroup>
+
+  <Target Name="GitCommitInfoTarget" AfterTargets="Restore" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet git-commit-info $(GitCommitInfoToolOptions) --output $(GitCommitInfoFilename)" />
+  </Target>
+  <!-- ========== end of Bitcraft.Tools.GitCommitInfo section ========== -->
+
+</Project>
