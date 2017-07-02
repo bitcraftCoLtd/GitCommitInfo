@@ -4,27 +4,15 @@ This tool generates a C# source code file containing the information of the late
 
 The name of the built binary is `dotnet-git-commit-info`, this is for integration with .NET Core CLI tool.
 
+This documentation is valid for version 1.1.0 or higher and may not match with lower version of `Bitcraft.Tools.GitCommitInfo`.
+
 # NuGet package
 
 A NuGet package is available here: https://www.nuget.org/packages/Bitcraft.Tools.GitCommitInfo
 
 # How to use
 
-First, for versions 1.1.0 or higher, be aware that running `dotnet restore` then `dotnet build` at the solution level will not work.
 
-You have to `restore` and `build` both projects separately:
-
-```
-dotnet restore Bitcraft.Tools.GitCommitInfo
-dotnet build Bitcraft.Tools.GitCommitInfo
-```
-
-then
-
-```
-dotnet restore TestLibrary
-dotnet build TestLibrary
-```
 
 ## In command line
 
@@ -89,17 +77,25 @@ Valid values | Default | Description
 Run the command `dotnet dotnet-git-commit-info.dll`, this will generate a file named `GitCommitInfo.cs` in the current directory, containing the following code.
 
 ```CSharp
-using System;
-
 /// <summary>
 /// Stores the git information of the current HEAD of your local repository.
 /// </summary>
-public static class GitCommitInfo
+public class GitCommitInfo
 {
+    /// <summary>
+    /// Gets an instance of the git commit information.
+    /// </summary>
+    public static GitCommitInfo Instance { get; }
+
+    static GitCommitInfo()
+    {
+        Instance = new GitCommitInfo();
+    }
+
     /// <summary>
     /// Gets the branch name.
     /// </summary>
-    public static string BranchName
+    public string BranchName
     {
         get { return "master"; }
     }
@@ -107,25 +103,25 @@ public static class GitCommitInfo
     /// <summary>
     /// Gets the short commit hash.
     /// </summary>
-    public static string ShortCommitHash
+    public string ShortCommitHash
     {
-        get { return "d173597"; }
+        get { return "cd1316d"; }
     }
 
     /// <summary>
     /// Gets the long commit hash.
     /// </summary>
-    public static string LongCommitHash
+    public string LongCommitHash
     {
-        get { return "d17359787eef1e5047e6c5542b16608b4782083b"; }
+        get { return "cd1316dc68fbf8d2e2e74754ef97101e96d8d687"; }
     }
 
     /// <summary>
     /// Gets the committer date.
     /// </summary>
-    public static string CommitterDate
+    public string CommitterDate
     {
-        get { return "2017-02-03 12:10:04 +0900"; }
+        get { return "2017-07-02 16:59:52 +0900"; }
     }
 }
 ```
@@ -146,19 +142,27 @@ dotnet dotnet-git-commit-info.dll \
 Then in the file `<output>/Misc/MyFile.cs`:
 
 ```CSharp
-using System;
-
 namespace Alice.Bob
 {
   /// <summary>
   /// Stores the git information of the current HEAD of your local repository.
   /// </summary>
-  internal static class Charly
+  internal class Charly
   {
+    /// <summary>
+    /// Gets an instance of the git commit information.
+    /// </summary>
+    public static Charly Instance { get; }
+
+    static Charly()
+    {
+      Instance = new Charly();
+    }
+
     /// <summary>
     /// Gets the branch name.
     /// </summary>
-    public static string BranchName
+    public string BranchName
     {
       get { return "master"; }
     }
@@ -166,31 +170,31 @@ namespace Alice.Bob
     /// <summary>
     /// Gets the short commit hash.
     /// </summary>
-    public static string ShortCommitHash
+    public string ShortCommitHash
     {
-      get { return "d173597"; }
+      get { return "91f73cf"; }
     }
 
     /// <summary>
     /// Gets the long commit hash.
     /// </summary>
-    public static string LongCommitHash
+    public string LongCommitHash
     {
-      get { return "d17359787eef1e5047e6c5542b16608b4782083b"; }
+      get { return "91f73cff7fce2a6525994be3884170ab9e07dc0e"; }
     }
 
     /// <summary>
     /// Gets the committer date.
     /// </summary>
-    public static string CommitterDate
+    public string CommitterDate
     {
-      get { return "2017-02-03 12:10:04 +0900"; }
+      get { return "2017-07-02 17:14:48 +0900"; }
     }
   }
 }
 ```
 
-## With .NET Core CLI tool (msbuild)
+## Integrate with .NET Core CLI tool (msbuild)
 
 This works for version 1.1.0 or greater of the `Bitcraft.Tools.GitCommitInfo` tool.
 
@@ -200,89 +204,24 @@ The name of the target `GitCommitInfoTarget` can probably be whatever you want.
 
 The target have to be run after the `Restore` target in order to ensure the tool is restored, and it has to run before the build happens.
 
-### Simple version
-
 ```XML
     ...
     <!-- ========== begining of Bitcraft.Tools.GitCommitInfo section ========== -->
     <ItemGroup>
-        <Compile Include="GitCommitInfo.cs" />
         <DotNetCliToolReference Include="Bitcraft.Tools.GitCommitInfo" Version="1.1.0" />
     </ItemGroup>
 
     <Target Name="GitCommitInfoTarget" AfterTargets="Restore" BeforeTargets="BeforeBuild">
         <Exec Command="dotnet git-commit-info" />
+        <ItemGroup>
+            <Compile Include="**/*$(DefaultLanguageSourceExtension)"
+                     Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder);$(BaseIntermediateOutputPath)**;$(BaseOutputPath)**;@(Compile)" />
+        </ItemGroup>
     </Target>
     <!-- ========== end of Bitcraft.Tools.GitCommitInfo section ========== -->
-    ...
-```
-
-`GitCommitInfo.cs` in the `Compile` directive is the default filename produced by the tool.
-If this `Compile` directive is not declared, each build where the said file does not exist yet, will fail miserably.
-
-`1.1.0` is the current version of the tool.
-
-
-### Advanced version
-
-```XML
-    ...
-    <!-- ========== begining of Bitcraft.Tools.GitCommitInfo section ========== -->
-    <PropertyGroup>
-        <!-- feel free to tweak bellow variables -->
-        <GitCommitInfoToolVersion>1.1.0</GitCommitInfoToolVersion>
-        <GitCommitInfoFilename>GitCommitInfo.cs</GitCommitInfoFilename>
-        <GitCommitInfoToolOptions></GitCommitInfoToolOptions>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <Compile Condition="!Exists('$(GitCommitInfoFilename)')" Include="$(GitCommitInfoFilename)" />
-        <DotNetCliToolReference Include="Bitcraft.Tools.GitCommitInfo" Version="$(GitCommitInfoToolVersion)" />
-    </ItemGroup>
-
-    <Target Name="GitCommitInfoTarget" AfterTargets="Restore" BeforeTargets="BeforeBuild">
-        <Exec Command="dotnet git-commit-info $(GitCommitInfoToolOptions) --output $(GitCommitInfoFilename)" />
-    </Target>
-    <!-- ========== end of Bitcraft.Tools.GitCommitInfo section ========== -->
-    ...
-```
-
-The variables:
-
-- `GitCommitInfoToolVersion` is set to the current version of the tool.
-- `GitCommitInfoFilename` is set to the default filename produced by the tool.
-- `GitCommitInfoToolOptions` are additional options to provide to the tool.
-
-## With .NET Core CLI tool (project.json)
-
-This works only for version bellow 1.1.0 of the `Bitcraft.Tools.GitCommitInfo` tool.
-
-To integrate this tool in your project, you have to modify your `project.json` file, as follow:
-
-```
-    ...
-    "tools": {
-        ...
-        "Bitcraft.Tools.GitCommitInfo": "<version>"
-        ...
-    }
-    ...
-    "scripts": {
-        ...
-        "precompile": "dotnet git-commit-info"
-        ...
-    }
     ...
 ```
 
 ### Note
 
-Bellow note is for versions lower than 1.1.0 of the tool.
-
-If you are already using the generated class in your project, and for some reasons the file to generate in not present on your local machine, you may get a compile error saying the class you generated does not exist.
-
-This is because files to compile are evaluated before the precompile scripts run, and thus the generated file is not taken into account. To fix this, just run compilation again and it will work.
-
-For more information about this issue, you can refer to the following GitHub links:
-- https://github.com/dotnet/cli/issues/1475
-- https://github.com/dotnet/cli/issues/3807
+The `Include` and `Exclude` rules trick of the `Compile` node of the project described in the previous section has been given by [Martin Ullrich](https://stackoverflow.com/users/784387/martin-ullrich) on [this post](https://stackoverflow.com/questions/44818730/is-there-a-net-core-cli-pre-before-build-task).
