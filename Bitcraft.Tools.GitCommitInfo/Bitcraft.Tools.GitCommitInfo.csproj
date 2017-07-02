@@ -27,7 +27,4 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.1.2" />
   </ItemGroup>
 
-  <Target Name="CopyPackage" AfterTargets="Pack">
-    <Copy SourceFiles="$(TargetDir)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(ProjectDir)..\TestLibrary\packages" />
-  </Target>
 </Project>
